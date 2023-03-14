@@ -1,6 +1,6 @@
 {
 	"name": "@marianmeres/notifications",
-	"version": "0.0.1",
+	"version": "0.1.0",
 	"scripts": {
 		"dev": "vite dev --port 10101",
 		"build": "vite build && npm run package",
@@ -11,7 +11,8 @@
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"test": "node --loader ts-node/esm tests/index.ts",
 		"test:watch": "nodemon --delay 0.5 -q -w \"src/**/*.*\" -w \"tests/**/*.*\" -x \"node --loader ts-node/esm tests/index.ts\" --",
-		"prettier": "prettier --write \"{src,tests,scripts}/**/*.{mjs,js,ts,css,scss,svelte}\""
+		"prettier": "prettier --write \"{src,tests,scripts}/**/*.{mjs,js,ts,css,scss,svelte}\"",
+		"release": "release -v minor"
 	},
 	"exports": {
 		".": {
