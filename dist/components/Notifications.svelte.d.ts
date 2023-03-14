@@ -3,12 +3,19 @@
 /** @typedef {typeof __propDef.slots}  NotificationsSlots */
 export default class Notifications extends SvelteComponentTyped<{
     notifications: any;
+    posX?: string;
+    posXMobile?: string;
+    posY?: string;
+    posYMobile?: string;
+    wrapPadding?: string;
+    wrapZIndex?: string;
     wrapClass?: string;
     wrapCss?: string;
     notifClass?: string;
     notifCss?: string;
-    closeLabel?: string;
+    ariaCloseLabel?: string;
     theme?: string;
+    themeVars?: {};
 }, {
     [evt: string]: CustomEvent<any>;
 }, {}> {
@@ -20,12 +27,19 @@ import { SvelteComponentTyped } from "svelte";
 declare const __propDef: {
     props: {
         notifications: any;
+        posX?: string;
+        posXMobile?: string;
+        posY?: string;
+        posYMobile?: string;
+        wrapPadding?: string;
+        wrapZIndex?: string;
         wrapClass?: string;
         wrapCss?: string;
         notifClass?: string;
         notifCss?: string;
-        closeLabel?: string;
+        ariaCloseLabel?: string;
         theme?: string;
+        themeVars?: {};
     };
     events: {
         [evt: string]: CustomEvent<any>;

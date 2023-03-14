@@ -1,58 +1,102 @@
-# create-svelte
+# @marianmeres/notifications
 
-Everything you need to build a Svelte library, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte).
+Two main parts:
 
-Read more about creating a library [in the docs](https://kit.svelte.dev/docs/packaging).
+1. Generic [Svelte](https://svelte.dev/) compatible 
+   [store](https://github.com/marianmeres/store) for notification objects management.
+2. Customizable [Svelte](https://svelte.dev/) notifications UI component.
 
-## Creating a project
+See and play with online at [playground](https://notifications.meres.sk).
 
-If you're seeing this, you've probably already done this step. Congrats!
-
-```bash
-# create a new project in the current directory
-npm create svelte@latest
-
-# create a new project in my-app
-npm create svelte@latest my-app
+## Install
+```shell
+$ npm i @marianmeres/notifications
 ```
 
-## Developing
+## Store usage example
+```typescript
+import { createNotificationsStore } from '@marianmeres/notifications';
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+const store = createNotificationsStore(
+    initial = [],
+    {
+        // maximum number of notifications kept in the queue, if exceeded, older ones (by `created`)
+        // will be discarded.
+        // Use 0 (zero) to disable capacity check
+        maxCapacity: 5,
+        // default value for Notification.type, defaults to "info"
+        defaultType: 'info',
+        // global time-to-live in seconds (after which notifs will be auto discarded)
+        // use 0 to disable default auto disposal
+        defaultTtl: 10,
+    }
+);
 
-```bash
-npm run dev
+// simply add as a plain string
+store.add('Some plain text');
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
+// or rich object...
+store.add({
+    // notifications without any text or html will be ignored
+    // the actual notification message
+    text: string,
+    // or (USE ONLY FOR MESSAGES WHICH YOU HAVE CONTROL OVER)
+    html: string,
+    
+    // ALL BELOW ARE OPTIONAL
+    
+    // unique id of the notif. Multiple notifications with the same id will be ignored
+    id: any,
+    // optional UI rendering well known hint (has no effect on the functionality, can be
+    // any string), defaults to "info"
+    type: string,
+    // will default to now (used for sorting, most recent comes first)
+    created: Date,
+    // generic action handler for triggered actions...
+    on: (eventName, self: Notification, all: Notification[], data) => any,
+    // functionally same as `on('click', ...)` except that ui may render differently if
+    // this exists (e.g. show pointer cursor)
+    onClick: (self: Notification, all: Notification[], data) => any,
+    // notification specific time-to-live in seconds (after which notif will be auto discarded)
+    // use 0 to disable auto disposal
+    ttl: number,
+    // if present, will skip default rendering altogether
+    component: Function | RenderProps,
+});
+
+// 
+store.remove(id);
+
+//
+const notif = store.find(id);
+
+//
+store.event(notif.id, 'my custom event', { some: 'event data' })
 ```
 
-Everything inside `src/lib` is part of your library, everything inside `src/routes` can be used as a showcase or preview app.
+## Svelte component usage
 
-## Building
+Customization options:
+- customize css vars of the default theme via `themeVars={{ var_name: value }}` prop. 
+  See source for supported vars,
+- create globally available custom css definition "namespaced" as `.notifications.theme-my-theme` 
+  and assign it via `theme="my-theme"` prop,
+- use additional "quick and dirty" props `wrapClass`, `wrapClass`, `notifClass`, `notifCss`,
+- use custom component (via store `options.component`), which will completelly bypass 
+  default rendering but still allow position/auto discard features. 
+  Always set `pointer-events: auto` on the custom component.
 
-To build your library:
+```javascript
+import Notifications from "@marianmeres/notifications/Notifications.svelte";
 
-```bash
-npm run package
-```
-
-To create a production version of your showcase app:
-
-```bash
-npm run build
-```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.
-
-## Publishing
-
-Go into the `package.json` and give your package the desired name through the `"name"` option. Also consider adding a `"license"` field and point it to a `LICENSE` file which you can create from a template (one popular option is the [MIT license](https://opensource.org/license/mit/)).
-
-To publish your library to [npm](https://www.npmjs.com):
-
-```bash
-npm publish
+// this should be placed just before closing </body> tag
+<Notifications 
+    notifications={store} 
+    posX={left/center/right} 
+    posXMobile={left/center/right}
+    posY={top/center/bottom} 
+    posYMobile={top/center/bottom} 
+    theme="custom_theme_name"
+    themeVars={{'some_theme_var': 'blue'}}
+/>
 ```

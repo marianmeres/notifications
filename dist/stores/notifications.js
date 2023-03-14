@@ -1,10 +1,21 @@
 import { createClog } from '@marianmeres/clog';
 import { createStore } from '@marianmeres/store';
+import { createTicker } from '@marianmeres/ticker';
 const isFn = (v) => typeof v === 'function';
 const DEFAULT_OPTIONS = {
     maxCapacity: 5,
+    defaultTtl: 10,
     defaultType: 'info',
     logger: createClog('notifications'),
+};
+const EVENT = {
+    CLICK: 'click',
+    CREATE: 'create',
+    // `remove` programatically, or e.g. by clicking on X
+    REMOVE: 'remove',
+    // to be auto disposed by ttl expiration
+    AUTO_DISPOSE: 'auto_dispose',
+    MOUSEOVER: 'mouseover',
 };
 export const createNotificationsStore = (initial = [], options = {}) => {
     if (!Array.isArray(initial))
@@ -14,10 +25,13 @@ export const createNotificationsStore = (initial = [], options = {}) => {
     // merge provided with defaults
     options = { ...DEFAULT_OPTIONS, ...(options || {}) };
     // sanitize options
-    if (isNaN(options.maxCapacity) || options.maxCapacity < 0) {
-        _log(`WARN: invalid maxCapacity option, falling back to default`);
-        options.maxCapacity = DEFAULT_OPTIONS.maxCapacity;
-    }
+    ['maxCapacity', 'defaultTtl'].forEach((prop) => {
+        options[prop] = parseInt(options[prop], 10);
+        if (isNaN(options[prop]) || options[prop] < 0) {
+            _log(`WARN: invalid '${prop}' option, falling back to default`);
+            options[prop] = DEFAULT_OPTIONS[prop];
+        }
+    });
     const _factory = (notif) => {
         if (typeof notif === 'string') {
             notif = { id: _id(), text: notif };
@@ -30,6 +44,9 @@ export const createNotificationsStore = (initial = [], options = {}) => {
         notif.id ||= _id();
         notif.type ||= options.defaultType; //
         notif.created = new Date(notif.created || Date.now());
+        //
+        if (notif.ttl === undefined)
+            notif.ttl = options.defaultTtl;
         return notif;
     };
     const _findIndex = (notifs, notif) => {
@@ -66,6 +83,32 @@ export const createNotificationsStore = (initial = [], options = {}) => {
     let notifs = [];
     initial.forEach((n) => (notifs = _add(notifs, n)));
     const _store = createStore(notifs);
+    // auto dispose feature
+    const ticker = createTicker(1_000);
+    const _tickerInit = () => {
+        const _tickerUnsub = ticker.start().subscribe((ts) => {
+            if (ts) {
+                const { disposed, kept } = _store.get().reduce((memo, n) => {
+                    if (n.ttl) {
+                        const expiry = n.created.valueOf() + n.ttl * 1000;
+                        expiry >= Date.now() ? memo.kept.push(n) : memo.disposed.push(n);
+                    }
+                    else {
+                        memo.kept.push(n);
+                    }
+                    return memo;
+                }, { disposed: [], kept: [] });
+                if (disposed.length) {
+                    disposed.forEach((n) => event(n.id, EVENT.AUTO_DISPOSE));
+                    _store.set(kept);
+                }
+            }
+        });
+        return () => {
+            ticker.stop();
+            _tickerUnsub();
+        };
+    };
     //
     function findById(id) {
         const notifs = _store.get();
@@ -75,19 +118,37 @@ export const createNotificationsStore = (initial = [], options = {}) => {
     function event(id, eventName, data = null) {
         const n = findById(id);
         if (n && isFn(n.on)) {
-            n.on(eventName, data, n, _store.get());
+            n.on(eventName, n, _store.get(), data);
+            if (eventName === EVENT.CLICK && isFn(n.onClick)) {
+                n.onClick(n, _store.get(), data);
+            }
             return true;
         }
         return false;
     }
+    // we need to keep track of subscriptions count, so we can do the cleanup
+    let _subsCount = 0;
+    let _tickerDestroy;
+    const subscribe = (cb) => {
+        if (!_subsCount++)
+            _tickerDestroy = _tickerInit();
+        const unsub = _store.subscribe(cb);
+        return () => {
+            if (!--_subsCount)
+                _tickerDestroy();
+            unsub();
+        };
+    };
     return {
-        subscribe: _store.subscribe,
+        subscribe,
+        //
+        get: () => _store.get(),
         //
         add: (notif) => {
             if (!Array.isArray(notif))
                 notif = [notif];
             let notifs = _store.get();
-            notif.forEach((n) => (notifs = _add(notifs, n, (_n) => event(_n.id, 'create'))));
+            notif.forEach((n) => (notifs = _add(notifs, n, (_n) => event(_n.id, EVENT.CREATE))));
             _store.set(notifs);
         },
         //
@@ -100,12 +161,15 @@ export const createNotificationsStore = (initial = [], options = {}) => {
             const idx = _findIndexById(notifs, id);
             if (idx > -1) {
                 const notif = notifs[idx];
-                event(id, 'remove');
+                event(id, EVENT.REMOVE);
                 _store.set(_removeByIdx(notifs, idx));
                 return true;
             }
             return false;
         },
+        //
         options: { ...options },
+        //
+        EVENT,
     };
 };

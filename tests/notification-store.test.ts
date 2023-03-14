@@ -22,7 +22,7 @@ suite.test('initial', async () => {
 });
 
 suite.test('add', async () => {
-	const store = createNotificationsStore([]);
+	const store = createNotificationsStore([], { defaultTtl: 0 });
 
 	store.subscribe((notifs) => {
 		assert(!notifs.length);
@@ -40,7 +40,7 @@ suite.test('add', async () => {
 	const old = { id: 'old', html: 'hoho', created: new Date(0), type: 'custom' };
 	store.add(old);
 
-	// test adding multiple times the same notifikation - must be ignored
+	// test adding multiple times the same notification - must be ignored
 	store.add(old);
 
 	store.subscribe((notifs) => {
@@ -70,7 +70,7 @@ suite.test('events', async () => {
 	const n = {
 		id: 'some-id',
 		text: 'some-text',
-		on: (eventName, data, self, all) => log.push({ eventName, data, self, all }),
+		on: (eventName, self, all, data) => log.push({ eventName, data, self, all }),
 	};
 
 	const store = createNotificationsStore([n, 'foo']);
@@ -82,6 +82,7 @@ suite.test('events', async () => {
 	// clog(log);
 	assert(log.length === 2);
 	assert(log[0].eventName === 'some');
+
 	assert(log[1].data === 456);
 
 	// once removed, no more event listening
@@ -108,5 +109,24 @@ suite.test('max capacity', async () => {
 		assert(notifs[1].text === 'd');
 	})();
 });
+
+suite.test(
+	'ttl',
+	async () => {
+		const store = createNotificationsStore([], { defaultTtl: 1 });
+		store.add('foo');
+
+		store.subscribe(async (notifs) => {
+			assert(notifs.length);
+		})();
+
+		await sleep(1100);
+
+		store.subscribe(async (notifs) => {
+			assert(!notifs.length);
+		})();
+	},
+	1200
+);
 
 export default suite;
