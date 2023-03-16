@@ -1,6 +1,6 @@
 {
 	"name": "@marianmeres/notifications",
-	"version": "0.1.0",
+	"version": "1.0.0",
 	"scripts": {
 		"dev": "vite dev --port 10101",
 		"build": "vite build && npm run package",
