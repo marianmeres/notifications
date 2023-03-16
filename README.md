@@ -124,3 +124,7 @@ import Notifications from "@marianmeres/notifications/Notifications.svelte";
     themeVars={{'my_theme_var': 'blue'}}
 />
 ```
+
+## Screenshots
+
+![example](./screenshots/example.png)
