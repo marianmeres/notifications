@@ -3,7 +3,8 @@
 Two main parts:
 
 1. Generic [Svelte](https://svelte.dev/) compatible 
-   [store](https://github.com/marianmeres/store) for notification objects management.
+   [_readable_ store](https://svelte.dev/docs#run-time-svelte-store-readable) for 
+   notification objects management.
 2. Customizable [Svelte](https://svelte.dev/) notifications UI component.
 
 ## [Playground and theme editor](https://notifications.meres.sk)
