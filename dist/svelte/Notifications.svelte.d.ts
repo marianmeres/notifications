@@ -7,6 +7,7 @@ export default class Notifications extends SvelteComponentTyped<{
     posXMobile?: string;
     posY?: string;
     posYMobile?: string;
+    wrapPosition?: string;
     wrapPadding?: string;
     wrapZIndex?: string;
     wrapClass?: string;
@@ -31,6 +32,7 @@ declare const __propDef: {
         posXMobile?: string;
         posY?: string;
         posYMobile?: string;
+        wrapPosition?: string;
         wrapPadding?: string;
         wrapZIndex?: string;
         wrapClass?: string;

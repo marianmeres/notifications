@@ -3,17 +3,12 @@
 	export let notification;
 </script>
 
-<div
-	class="notif"
-	on:click={() => notifications.remove(notification.id)}
->
+<div class="notif" on:click={() => notifications.remove(notification.id)}>
 	<p>
-		This is a regular notification rendered via a custom component.
-		If you have specified non-zero <code>ttl</code>, it will auto dispose normally.
+		This is a regular notification rendered via a custom component. If you have specified
+		non-zero <code>ttl</code>, it will auto dispose normally.
 	</p>
-	<p>
-		You can click anywhere here to remove it manually.
-	</p>
+	<p>You can also click anywhere here to remove it manually.</p>
 	<pre>{JSON.stringify(notification, null, 2)}</pre>
 </div>
 

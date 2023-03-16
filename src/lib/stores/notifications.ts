@@ -7,11 +7,13 @@ type stringify = () => string;
 // human readable label (or i18n like shape { locale: label }, or fn )
 type Label = string | Record<string, string> | stringify | object;
 
+type SortOrder = 'asc' | 'desc';
+
 type onEventFn = (
 	eventName: string,
 	self: Notification,
 	all: Notification[],
-	data: any,
+	data: any
 ) => void;
 
 interface RenderProps {
@@ -20,42 +22,60 @@ interface RenderProps {
 }
 
 interface Notification extends Record<string, any> {
-	// unique id of the notif. Multiple notifications with the same id will be
-	// ignored
+	// unique id of the notification. If not provided, will be calculated from content.
+	// Multiple notifications with the same id will be ignored (but the `count` will be increased)
 	id: any;
+
 	// optional UI rendering well known hint (has no effect on the functionality, can be
 	// any string), defaults to "info"
-	type?: string;
+	type: string;
+
 	// the actual notification message (either plain text, or rich html)
 	// notifications without any label will be ignored
-	text?: Label;
-	html?: Label;
-	// for sorting in the queue, will default to now
-	created?: Date;
+	text: Label;
+	html: Label;
+
+	// for sorting the queue, will default to now
+	created: Date;
+
 	// generic action handler for triggered actions...
-	on?: onEventFn;
-	// functionally same as `on('click', ...)` except that ui may render differently if
-	// this exists (e.g. show pointer cursor), which would not be possible for `on('click', ...)`
-	onClick?: (self: Notification, all: Notification[], data: any) => void;
+	on: onEventFn;
+
+	// Same as `on('click', ...)` except that UI may detect if this exists (e.g. show
+	// pointer cursor), which would not be possible for `on('click', ...)`
+	onClick: (self: Notification, all: Notification[], data: any) => void;
+
 	// notification specific time-to-live in seconds (after which notif will be auto discarded)
 	// use 0 to disable auto disposal
-	ttl?: number;
+	ttl: number;
+
+	// Number of notifications in the queue with the same `id`. If you do not provide your
+	// own id, it will be calculated from content (type, text, html).
+	count: number;
+
 	// optional (but conventional) render config, in shape `{ component, props }`
-	component?: Function | RenderProps;
+	component: Function | RenderProps;
 }
 
-type NotificationParam = Notification | string;
+type NotificationParam = Partial<Notification> | string;
 
 interface CreateNotiticationStoreOptions {
-	// maximum number of notifications kept in the queue, if exceeded, older ones (by `created`)
+	// Maximum number of notifications kept in the queue, if exceeded, older ones (by `created`)
 	// will be discarded.
 	// Use 0 (zero) to disable capacity check
 	maxCapacity: number;
-	// default value for Notification.type, defaults to "info"
+
+	// Default value for Notification.type, defaults to "info".
 	defaultType: string;
-	// global time-to-live in seconds (after which notifs will be auto discarded)
-	// use 0 to disable default auto disposal
+
+	// Global time-to-live in seconds (after which notifs will be auto discarded)
+	// Use 0 to disable default auto disposal.
 	defaultTtl: number;
+
+	// How to sort the queue, "asc" (default) or "desc".
+	// Sorting is always done by the `created` prop.
+	sortOrder?: SortOrder;
+
 	// debug
 	logger: (...v) => void;
 }
@@ -66,6 +86,7 @@ const DEFAULT_OPTIONS: Partial<CreateNotiticationStoreOptions> = {
 	maxCapacity: 5,
 	defaultTtl: 10,
 	defaultType: 'info',
+	sortOrder: 'asc',
 	logger: createClog('notifications'),
 };
 
@@ -74,10 +95,20 @@ const EVENT = {
 	CREATE: 'create',
 	// `remove` programatically, or e.g. by clicking on X
 	REMOVE: 'remove',
-	// to be auto disposed by ttl expiration
+	// triggered when auto disposed by ttl expiration
 	AUTO_DISPOSE: 'auto_dispose',
+	// usefull for detecting interacion (so internally may notify as "seen")
 	MOUSEOVER: 'mouseover',
 };
+
+// https://stackoverflow.com/questions/7616461/generate-a-hash-from-string-in-javascript
+const _strHash = (str) =>
+	str.split('').reduce((a, b) => {
+		a = (a << 5) - a + b.charCodeAt(0);
+		return a & a;
+	}, 0);
+
+const _id = (type, content) => ['id', type, _strHash(content)].join('-');
 
 export const createNotificationsStore = (
 	initial: NotificationParam[] = [],
@@ -86,23 +117,31 @@ export const createNotificationsStore = (
 	if (!Array.isArray(initial)) initial = [initial];
 
 	const _log = (...v) => (isFn(options.logger) ? options.logger.apply(null, v) : null);
-	const _id = () => `notif-${Math.random().toString(36).slice(2)}`;
 
 	// merge provided with defaults
 	options = { ...DEFAULT_OPTIONS, ...(options || {}) };
 
-	// sanitize options
-	['maxCapacity', 'defaultTtl'].forEach((prop) => {
-		options[prop] = parseInt(options[prop], 10);
-		if (isNaN(options[prop]) || options[prop] < 0) {
-			_log(`WARN: invalid '${prop}' option, falling back to default`);
-			options[prop] = DEFAULT_OPTIONS[prop];
+	const _setOption = (k, v) => {
+		// _log(`INFO: setting option '${k} = ${v}'`);
+		if (/^maxCapacity|defaultTtl$/.test(k)) {
+			v = parseInt(v, 10);
+			if (isNaN(v) || v < 0) {
+				_log(`WARN: invalid '${k}' option, falling back to default`);
+				options[k] = DEFAULT_OPTIONS[k];
+			} else {
+				options[k] = v;
+			}
+		} else {
+			options[k] = v;
 		}
-	});
+	};
 
-	const _factory = (notif: string | Notification) => {
+	// sanitize options
+	['maxCapacity', 'defaultTtl'].forEach((k) => _setOption(k, options[k]));
+
+	const _factory = (notif: string | NotificationParam) => {
 		if (typeof notif === 'string') {
-			notif = { id: _id(), text: notif };
+			notif = { id: 0, text: notif };
 		}
 
 		// ignore invalid (empty) notifs
@@ -111,19 +150,15 @@ export const createNotificationsStore = (
 			return null;
 		}
 
-		notif.id ||= _id();
 		notif.type ||= options.defaultType; //
+		notif.id ||= _id(notif.type, [notif.text, notif.html].join());
 		notif.created = new Date(notif.created || Date.now());
+		notif.count = 1;
 
 		//
 		if (notif.ttl === undefined) notif.ttl = options.defaultTtl;
 
 		return notif;
-	};
-
-	const _findIndex = (notifs, notif) => {
-		notif = _factory(notif);
-		return notif ? _findIndexById(notifs, notif.id) : -1;
 	};
 
 	const _findIndexById = (notifs: Notification[], id: any) =>
@@ -137,31 +172,43 @@ export const createNotificationsStore = (
 		return notifs;
 	};
 
-	const _contains = (notifs: Notification[], notif: Notification) =>
-		_findIndex(notifs, notif) > -1;
-
 	const _add = (
 		notifs: Notification[],
-		notif: Notification | string,
+		notif: NotificationParam | string,
 		onAddHook: Function = null
 	) => {
 		notif = _factory(notif);
-		let changed = 0;
 
-		if (notif && !_contains(notifs, notif)) {
-			notifs.push(notif);
-			notifs.sort((a, b) => a.created.valueOf() - b.created.valueOf());
-			if (isFn(onAddHook)) onAddHook(notif);
-			changed++;
+		// return early on invalid
+		if (!notif) return notifs;
+
+		const _isDesc = options.sortOrder === 'desc';
+
+		const idx = _findIndexById(notifs, notif.id);
+		if (idx > -1) {
+			notifs[idx].count++;
+			notifs[idx].created = new Date(
+				Math.max(notifs[idx].created.valueOf(), notif.created.valueOf())
+			);
+		} else {
+			notifs.push(notif as any);
+			notifs.sort((a, b) => {
+				let _a = a.created.valueOf();
+				let _b = b.created.valueOf();
+				return _isDesc ? _b - _a : _a - _b;
+			});
 		}
 
-		// keep only `maxCapacity` most recent
+		if (isFn(onAddHook)) onAddHook(notif);
+
+		// keep only `maxCapacity` in the queue
 		if (options.maxCapacity && notifs.length > options.maxCapacity) {
-			notifs = notifs.slice(-1 * options.maxCapacity);
-			changed++;
+			notifs = _isDesc
+				? notifs.slice(0, options.maxCapacity)
+				: notifs.slice(-1 * options.maxCapacity);
 		}
 
-		return changed ? [...notifs] : notifs;
+		return [...notifs];
 	};
 
 	// main internal store
@@ -208,8 +255,10 @@ export const createNotificationsStore = (
 
 	function event(id: string, eventName: string, data: any = null) {
 		const n = findById(id);
-		if (n && isFn(n.on)) {
-			n.on(eventName, n, _store.get(), data);
+		if (n) {
+			if (isFn(n.on)) {
+				n.on(eventName, n, _store.get(), data);
+			}
 			if (eventName === EVENT.CLICK && isFn(n.onClick)) {
 				n.onClick(n, _store.get(), data);
 			}
@@ -263,5 +312,8 @@ export const createNotificationsStore = (
 		options: { ...options },
 		//
 		EVENT,
+		// some options setters (for playground mostly)
+		setMaxCapacity: (v) => _setOption('maxCapacity', v),
+		setSortOrder: (v) => _setOption('sortOrder', v),
 	};
 };

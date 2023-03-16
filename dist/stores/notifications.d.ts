@@ -1,5 +1,6 @@
 type stringify = () => string;
 type Label = string | Record<string, string> | stringify | object;
+type SortOrder = 'asc' | 'desc';
 type onEventFn = (eventName: string, self: Notification, all: Notification[], data: any) => void;
 interface RenderProps {
     component: Function;
@@ -7,20 +8,22 @@ interface RenderProps {
 }
 interface Notification extends Record<string, any> {
     id: any;
-    type?: string;
-    text?: Label;
-    html?: Label;
-    created?: Date;
-    on?: onEventFn;
-    onClick?: (self: Notification, all: Notification[], data: any) => void;
-    ttl?: number;
-    component?: Function | RenderProps;
+    type: string;
+    text: Label;
+    html: Label;
+    created: Date;
+    on: onEventFn;
+    onClick: (self: Notification, all: Notification[], data: any) => void;
+    ttl: number;
+    count: number;
+    component: Function | RenderProps;
 }
-type NotificationParam = Notification | string;
+type NotificationParam = Partial<Notification> | string;
 interface CreateNotiticationStoreOptions {
     maxCapacity: number;
     defaultType: string;
     defaultTtl: number;
+    sortOrder?: SortOrder;
     logger: (...v: any[]) => void;
 }
 export declare const createNotificationsStore: (initial?: NotificationParam[], options?: Partial<CreateNotiticationStoreOptions>) => {
@@ -34,6 +37,7 @@ export declare const createNotificationsStore: (initial?: NotificationParam[], o
         maxCapacity?: number;
         defaultType?: string;
         defaultTtl?: number;
+        sortOrder?: SortOrder;
         logger?: (...v: any[]) => void;
     };
     EVENT: {
@@ -43,5 +47,7 @@ export declare const createNotificationsStore: (initial?: NotificationParam[], o
         AUTO_DISPOSE: string;
         MOUSEOVER: string;
     };
+    setMaxCapacity: (v: any) => void;
+    setSortOrder: (v: any) => void;
 };
 export {};

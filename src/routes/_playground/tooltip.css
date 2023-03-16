@@ -1,0 +1,140 @@
+/*
+	https://dev.to/kallmanation/building-a-tooltip-with-only-css-4k9
+	https://codepen.io/kallmanation/pen/VwvJQRO
+- elements WITH a title attribute
+  [title]
+- elements with an href MATCHING "xyz"
+  [href="xyz"]
+- elements with an href CONTAINING STRING "xyz"
+  [href*="xyz"]
+- elements with an href ENDING ".org"
+  [href$=".org"]
+- elements whose class attribute CONTAINS THE WORD "logo"
+  [class~="logo"]
+
+ */
+
+/* tooltip */
+[data-tooltip][aria-label] {
+	position: relative;
+}
+
+[data-tooltip][aria-label]::before {
+	content: attr(aria-label);
+	pointer-events: none;
+	white-space: pre;
+	position: absolute;
+	color: #fff;
+	background: rgb(0, 0, 0);
+	padding: 0.3rem 1rem;
+	border-radius: 0.3rem;
+	opacity: 0;
+	visibility: hidden;
+	font-size: 0.9rem;
+}
+
+[data-tooltip][aria-label]::after {
+	content: '';
+	pointer-events: none;
+	width: 0;
+	height: 0;
+	position: absolute;
+	border-color: rgba(0, 0, 0, 0.7);
+	border-width: 0;
+	border-style: solid;
+	opacity: 0;
+	visibility: hidden;
+}
+
+[data-tooltip^='up'][aria-label]::before {
+	bottom: calc(8px + 100%);
+	right: 50%;
+	transform: translateX(50%);
+}
+
+[data-tooltip^='up'][aria-label]::after {
+	border-top-width: 5px;
+	border-right-width: 5px;
+	border-right-color: #0000;
+	border-left-width: 5px;
+	border-left-color: #0000;
+	bottom: calc(3px + 100%);
+	right: 50%;
+	transform: translateX(50%);
+}
+
+[data-tooltip^='down'][aria-label]::before {
+	top: calc(8px + 100%);
+	right: 50%;
+	transform: translateX(50%);
+}
+
+[data-tooltip^='down'][aria-label]::after {
+	border-bottom-width: 5px;
+	border-right-width: 5px;
+	border-right-color: #0000;
+	border-left-width: 5px;
+	border-left-color: #0000;
+	top: calc(3px + 100%);
+	right: 50%;
+	transform: translateX(50%);
+}
+
+[data-tooltip^='left'][aria-label]::before {
+	right: calc(8px + 100%);
+	bottom: 50%;
+	transform: translateY(50%);
+}
+
+[data-tooltip^='left'][aria-label]::after {
+	border-left-width: 5px;
+	border-top-width: 5px;
+	border-top-color: #0000;
+	border-bottom-width: 5px;
+	border-bottom-color: #0000;
+	bottom: 50%;
+	right: calc(3px + 100%);
+	transform: translateY(50%);
+}
+
+[data-tooltip^='right'][aria-label]::before {
+	left: calc(8px + 100%);
+	bottom: 50%;
+	transform: translateY(50%);
+}
+
+[data-tooltip^='right'][aria-label]::after {
+	border-right-width: 5px;
+	border-top-width: 5px;
+	border-top-color: #0000;
+	border-bottom-width: 5px;
+	border-bottom-color: #0000;
+	bottom: 50%;
+	left: calc(3px + 100%);
+	transform: translateY(50%);
+}
+
+[data-tooltip][aria-label]:hover::before,
+[data-tooltip][aria-label]:hover::after {
+	visibility: visible;
+	opacity: 1;
+	transition-property: opacity;
+	transition-duration: 0.2s;
+	transition-timing-function: ease-in-out;
+	transition-delay: 0s;
+}
+
+[data-tooltip$='100'][aria-label]:hover::before,
+[data-tooltip$='100'][aria-label]:hover::after {
+	transition-delay: 0.1s;
+}
+
+[data-tooltip$='500'][aria-label]:hover::before,
+[data-tooltip$='500'][aria-label]:hover::after {
+	transition-delay: 0.5s;
+}
+
+[data-tooltip$='1000'][aria-label]:hover::before,
+[data-tooltip$='1000'][aria-label]:hover::after {
+	transition-delay: 1s;
+}

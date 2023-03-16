@@ -20,8 +20,8 @@
 			"svelte": "./dist/index.js"
 		},
 		"./Notifications.svelte": {
-			"types": "./dist/components/Notifications.svelte.d.ts",
-			"svelte": "./dist/components/Notifications.svelte"
+			"types": "./dist/svelte/Notifications.svelte.d.ts",
+			"svelte": "./dist/svelte/Notifications.svelte"
 		}
 	},
 	"files": [
@@ -31,9 +31,9 @@
 		"svelte": "^3.54.0"
 	},
 	"devDependencies": {
-		"@marianmeres/clog": "^0.6.0",
-		"@marianmeres/random-human-readable": "^0.0.6",
-		"@marianmeres/release": "^0.0.9",
+		"@marianmeres/clog": "^1.0.0",
+		"@marianmeres/random-human-readable": "^1.0.0",
+		"@marianmeres/release": "^1.0.0",
 		"@marianmeres/test-runner": "^2.0.13",
 		"@sveltejs/adapter-auto": "^2.0.0",
 		"@sveltejs/adapter-static": "^2.0.1",
@@ -57,7 +57,7 @@
 	"types": "./dist/index.d.ts",
 	"type": "module",
 	"dependencies": {
-		"@marianmeres/store": "^0.1.2",
-		"@marianmeres/ticker": "^0.1.4"
+		"@marianmeres/store": "^1.0.0",
+		"@marianmeres/ticker": "^1.0.2"
 	}
 }

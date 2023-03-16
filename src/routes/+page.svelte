@@ -1,225 +1,298 @@
 <script>
+	import { writable } from 'svelte/store';
+	import { onDestroy, onMount } from 'svelte';
+	import { getRandomHumanReadable } from '@marianmeres/random-human-readable';
 	import { createClog } from '@marianmeres/clog';
 	import { createNotificationsStore } from '$lib';
-	import Notifications from '$lib/components/Notifications.svelte';
-	import { getRandomHumanReadable } from '@marianmeres/random-human-readable';
-	import CustomN from './CustomN.svelte';
+	import './_playground/tooltip.css';
+	import Notifications from '$lib/svelte/Notifications.svelte';
+	import CustomN from './_playground/CustomN.svelte';
+	import Button from './_playground/Button.svelte';
+	import Code from './_playground/Code.svelte';
+	import Console from './_playground/Console.svelte';
+	import Block from './_playground/Block.svelte';
+	import Box from './_playground/Box.svelte';
+	import Types from './_playground/Types.svelte';
+	import {
+		getRandomArrayItem,
+		getRandomInt,
+		randomTxt,
+		sleep,
+		times,
+	} from './_playground/utils.js';
+	import ClipCopy from './_playground/ClipCopy.svelte';
 
 	const clog = createClog('example');
 
-	// prettier-ignore
-	const randomTxt = () => {
-		const ucf = (s) => s.slice(0, 1).toUpperCase() + s.slice(1);
-		const rhr = () => getRandomHumanReadable({ adjCount: 2, colorsCount: 1, nounsCount: 1, joinWith: ' ' });
-		return [ '<b>', ucf(rhr()), '</b><br /><small>', ucf(rhr()), ' and ', rhr(), '.</small>' ].join('');
-	}
-
-	const getRandomInt = (min, exclusiveMax) => {
-		min = Math.ceil(min);
-		exclusiveMax = Math.floor(exclusiveMax);
-		return Math.floor(Math.random() * (exclusiveMax - min) + min);
-	};
-
-	const getRandomArrayItem = (arr) => arr[getRandomInt(0, arr.length)];
-
 	const TYPES = ['info', 'success', 'warn', 'error'];
-	const TTLS = [0, 5, 10, 20, 60];
+	const TTLS = [0, 5];
+
+	//
+	const storeConfig = writable({ maxCapacity: 4, sortOrder: 'asc' });
+	const componentProps = writable({ posX: 'right', posY: 'top', wrapPadding: '1rem' });
+	const borderThemeVars = writable({});
+	const themeVars = writable({});
+	const boxThemeVars = writable({});
+	const infoThemeVars = writable({});
 
 	//
 	const notifications = createNotificationsStore([], {
 		defaultTtl: 0,
-		maxCapacity: 5,
+		maxCapacity: $storeConfig.maxCapacity,
+		sortOrder: $storeConfig.sortOrder,
+		logger: clog,
 	});
+
+	onDestroy(
+		storeConfig.subscribe(({ maxCapacity, sortOrder }) => {
+			notifications.setMaxCapacity(maxCapacity);
+			notifications.setSortOrder(sortOrder);
+		})
+	);
 
 	let log = [];
 
 	let text = randomTxt();
 	let type;
 	let isHtml = true;
+	let randomDupes = true;
 	let ttl = notifications.options.defaultTtl;
-	let themeVars = {};
+	let outputRef;
 
-	let posX = 'right';
-	let posY = 'top';
-
-	const create = () => {
-		const id = Math.random().toString(36).slice(2);
-		const isCustom = text === 'xxx';
-
-		notifications.add({
-			id,
-			text: isHtml ? undefined : text,
-			html: isHtml ? text : undefined,
-			type,
-			on: (eventName, data, self, all) => {
-				log = [`${new Date().toISOString().slice(11, 19)} ${eventName}: ${id}`, ...log];
-			},
-			onClick: (self, all, data) => {
-				if (self.ttl) {
-					self.ttl = 0;
-					notifications.event(self.id, 'auto disposal disabled');
+	//
+	const create = (all = false) => {
+		const on = (eventName, self, all, data) => {
+			if (eventName !== notifications.EVENT.MOUSEOVER) {
+				log = [
+					`${new Date().toISOString().slice(14, 19)} ${eventName}: ${self.id}`,
+					...log,
+				];
+			}
+		};
+		const onClick = (self, all, data) => console.log(`Clicked on ${self.id}`);
+		if (all) {
+			const html = TYPES.map(randomTxt);
+			(async () => {
+				for (let idx = 0; idx < TYPES.length; idx++) {
+					const type = TYPES[idx];
+					const created = new Date();
+					notifications.add({ html: html[idx], ttl: 0, type, on, created, onClick });
+					if (randomDupes && Math.random() >= 0.5) {
+						times(getRandomInt(1, 5), () => {
+							notifications.add({ html: html[idx], type, created });
+						});
+					}
+					// so the `created` prop will be different, and sorting will work as expected
+					await sleep(10);
 				}
-			},
-			ttl,
-			component: isCustom ? CustomN : undefined,
-		});
+			})();
+		} else {
+			notifications.add({
+				text: isHtml ? undefined : text,
+				html: isHtml ? text : undefined,
+				type,
+				on,
+				onClick,
+				ttl,
+				component: /^xxx$/i.test(text) ? CustomN : undefined,
+			});
 
-		text = randomTxt();
-		type = getRandomArrayItem(TYPES);
-		ttl = getRandomArrayItem(TTLS);
+			text = randomTxt();
+			type = getRandomArrayItem(TYPES);
+		}
 	};
+
+	onMount(() => create(true));
 </script>
 
-<!-- prettier-ignore -->
-<div class="manager">
+<svelte:head>
+	<title>Notifications playground and theme configurator</title>
+</svelte:head>
+
+<div class="header">
 	<h1>
 		<a href="https://github.com/marianmeres/notifications" target="_blank">
 			@marianmeres/notifications
 		</a>
-		playground
+		playground and theme editor
 	</h1>
-
-	<p>
-		<label>
-			<span>Text <small style="opacity: 75%;">(try "xxx")</small></span>
-			<textarea bind:value={text} rows="3" />
-		</label>
-	</p>
-
-	<p>
-		<label>
-			<input type="checkbox" bind:checked={isHtml} />
-			Allow html
-		</label>
-	</p>
-
-	<p>
-		<label>
-			<span>Type</span>
-			<select bind:value={type}>
-				{#each TYPES as type}
-					<option value={type}>{type}</option>
-				{/each}
-			</select>
-		</label>
-	</p>
-
-	<p>
-		<label>
-			<span>
-				Expiry time
-				<small style="opacity: 75%;">(in seconds, 0 no expiry)</small>
-			</span>
-			<select bind:value={ttl}>
-				{#each TTLS as i}
-					<option value={i}>{i}</option>
-				{/each}
-			</select>
-		</label>
-	</p>
-
-	<button on:click|preventDefault={create} class="create">Create</button>
-
-	<hr />
-
-	<table>
-		<tr>
-			<td><button on:click|preventDefault={() => { posX='left';   posY='top'; }}>↖</button></td>
-			<td><button on:click|preventDefault={() => { posX='center'; posY='top'; }}>↑</button></td>
-			<td><button on:click|preventDefault={() => { posX='right';  posY='top' }}>↗</button></td>
-		</tr>
-		<tr>
-			<td><button on:click|preventDefault={() => { posX='left';   posY='center'; }}>←</button></td>
-			<td><button on:click|preventDefault={() => { posX='center'; posY='center'; }}>•</button></td>
-			<td><button on:click|preventDefault={() => { posX='right';  posY='center' }}>→</button></td>
-		</tr>
-		<tr>
-			<td><button on:click|preventDefault={() => { posX='left';   posY='bottom'; }}>↙</button></td>
-			<td><button on:click|preventDefault={() => { posX='center'; posY='bottom'; }}>↓</button></td>
-			<td><button on:click|preventDefault={() => { posX='right';  posY='bottom' }}>↘</button></td>
-		</tr>
-	</table>
-
-	<hr />
-	<p style="margin: 1rem 0 0 0;">
-		In this playground, the clicked notifications will not be auto disposed.<br/>
-		<small style="opacity: 75%;">The <code>onClick</code> handler
-			sets <code>n.ttl = 0</code></small>
-	</p>
-
-	<hr />
-		<b>Theme</b>
-		<div>
-			<button on:click={() => themeVars = {}}>Default</button>
-			<button on:click={() => themeVars = {
-				box_border: 0,
-				box_border_radius: 0,
-				box_width: '100%',
-				box_color: 'white',
-				control_button_color: 'white',
-				content_text_align: 'center',
-				filter: 'none',
-				//
-				box_background: 'crimson',
-				box_background_hover: 'maroon',
-				//
-				box_background_warn: 'tomato',
-				box_background_warn_hover: 'saddlebrown',
-				//
-				box_background_error: 'mediumvioletred',
-				box_background_error_hover: 'midnightblue',
-				//
-				box_background_success: 'mediumseagreen',
-				box_background_success_hover: 'forestgreen',
-			}}>Customized <code>themeVars</code></button>
-		</div>
-	<hr />
-
-	{#if log.length}
-		<b>Event log</b>
-		<small
-			on:click={() => log = []}
-			style="text-decoration: underline; cursor: pointer;"
-		>clear</small>
-		<pre>{log.slice(0, 15).join("\n")}</pre>
-	{/if}
-
-	<p>
-		<small>
-			<a
-				href="https://github.com/marianmeres/notifications/blob/master/src/routes/%2Bpage.svelte"
-				target="_blank"
-				style="color: gray"
-			>
-				This page source.
-			</a>
-		</small>
+	<p style="margin: 0;">
+		Generic store library for notifications and Svelte component for their rendering. Read
+		full
+		<a href="https://github.com/marianmeres/notifications" target="_blank">
+			documentation</a
+		> at GitHub.
 	</p>
 </div>
 
-<Notifications {notifications} {posX} {posY} {themeVars} />
+<div class="layout">
+	<div class="left">
+		<div class="manager">
+			<Block><ClipCopy {outputRef} /></Block>
+
+			<Block>
+				<label>
+					<span><b>Text</b> <small>(try "xxx")</small></span>
+					<textarea bind:value={text} rows="3" style="font-size: .9rem;" />
+				</label>
+
+				<div style="display: flex;">
+					<div style="flex: 1; padding-right: .5rem;">
+						<label>
+							<span><b>Type</b></span>
+							<select bind:value={type}>
+								{#each TYPES as type}
+									<option value={type}>{type}</option>
+								{/each}
+							</select>
+						</label>
+					</div>
+					<div style="flex: 1; padding-left: .5rem;">
+						<label>
+							<span><b>Expiry</b> <small>(seconds)</small></span>
+							<select bind:value={ttl}>
+								{#each TTLS as i}
+									<option value={i}>{i}</option>
+								{/each}
+							</select>
+						</label>
+					</div>
+				</div>
+
+				<p data-tooltip="up" aria-label="Dupes are ignored (count badge is shown).">
+					<small>
+						Same <code>[text,type]</code> pair is considered as duplicate.
+					</small>
+				</p>
+
+				<div style="display: flex">
+					<div style="flex: 1;">
+						<Button on:click={() => create(false)}>Create</Button>
+					</div>
+					<div>
+						<label style="margin-bottom: 0">
+							<input type="checkbox" bind:checked={isHtml} />
+							Allow html
+						</label>
+					</div>
+				</div>
+			</Block>
+
+			<Block>
+				<div style="display: flex">
+					<div style="flex: 1;">
+						<Button on:click={() => create(true)}>Create all types</Button>
+					</div>
+					<div>
+						<label style="margin-bottom: 0">
+							<input type="checkbox" bind:checked={randomDupes} />
+							Random dupes
+						</label>
+					</div>
+				</div>
+			</Block>
+
+			<Block><Box {themeVars} {componentProps} /></Block>
+
+			<Block><Types {themeVars} {TYPES} /></Block>
+
+			<Block>
+				<div style="display: flex;">
+					<div style="flex: 1; padding-right: .5rem;">
+						<label style="margin-bottom: .5rem">
+							<span><b>Store capacity</b></span>
+							<select bind:value={$storeConfig.maxCapacity}>
+								{#each [4, 8] as value}
+									<option {value}>{value}</option>
+								{/each}
+							</select>
+						</label>
+					</div>
+					<div style="flex: 1; padding-left: .5rem;">
+						<label style="margin-bottom: .5rem">
+							<span><b>Sort order</b></span>
+							<select bind:value={$storeConfig.sortOrder}>
+								{#each ['asc', 'desc'] as value}
+									<option {value}>{value}</option>
+								{/each}
+							</select>
+						</label>
+					</div>
+				</div>
+				<p style="margin-bottom: 0">
+					<small> Changes will have effect on next create. </small>
+				</p>
+			</Block>
+
+			<!--<Block><Console {log} /></Block>-->
+		</div>
+
+		<footer>
+			Author: Marian Meres, <a href="mailto:marian@meres.sk">marian@meres.sk</a>
+		</footer>
+	</div>
+	<div class="right">
+		<Code {themeVars} {componentProps} {storeConfig} bind:outputRef />
+		<Notifications
+			{notifications}
+			posX={$componentProps.posX}
+			posY={$componentProps.posY}
+			wrapPadding={$componentProps.wrapPadding}
+			themeVars={$themeVars}
+			wrapPosition="fixed"
+		/>
+	</div>
+</div>
 
 <style lang="scss">
-	.manager {
-		max-width: 350px;
-		background: rgba(0, 0, 0, 0.15);
-		padding: 1rem;
-		min-height: 100vh;
-		font-size: 1rem;
+	:global(a),
+	:global(a:hover),
+	:global(code) {
+		color: #7f1d1d;
+	}
 
+	.header {
+		background: #e7e5e4;
+		margin: 0 0 1rem 0;
+		padding: 1rem;
 		h1 {
 			margin: 0 0 1rem 0;
 			padding: 0;
 			font-size: 1.2rem;
+			font-weight: bolder;
 		}
+	}
+
+	.layout {
+		display: flex;
+		.left {
+			width: 400px;
+			display: flex;
+			flex-direction: column;
+		}
+		.right {
+			flex: 1;
+			position: relative;
+			//background: white;
+			padding-right: 1rem;
+		}
+	}
+
+	.manager {
+		width: 100%;
+		padding: 0 1rem;
+
 		label {
+			margin-bottom: 1rem;
 			display: block;
 			width: 100%;
 			& > span {
 				display: block;
 				margin-bottom: 0.2rem;
+				& small {
+					opacity: 75%;
+				}
 			}
-
 			& input[type='number'],
 			& textarea,
 			& select {
@@ -227,25 +300,31 @@
 				width: 100%;
 			}
 		}
-		td button {
-			width: 2rem;
-		}
-		table {
-			margin-bottom: 1rem;
-		}
-		button.create {
-			font-weight: bolder;
-			background: lightblue;
+	}
+
+	footer {
+		font-size: 0.85rem;
+		padding: 0 1.5rem;
+		color: gray;
+		a {
+			color: gray;
+			text-decoration: none;
 		}
 	}
 
-	pre {
-		margin: 0.5rem 0;
-		background: white;
-		padding: 0.2rem;
-		max-height: 300px;
-		overflow-y: scroll;
-		font-size: 0.8rem;
+	:global(table.inputs) {
 		width: 100%;
+		font-size: 0.8rem;
+		white-space: nowrap;
+		:global(th) {
+			font-weight: normal;
+		}
+		:global(td) {
+			width: 100%;
+			padding-left: 1rem;
+			:global(input) {
+				width: 100%;
+			}
+		}
 	}
 </style>

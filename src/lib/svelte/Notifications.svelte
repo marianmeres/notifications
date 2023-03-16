@@ -13,6 +13,7 @@
 	export let posY = 'top';
 	export let posYMobile = 'bottom';
 	//
+	export let wrapPosition = 'fixed';
 	export let wrapPadding = '1rem';
 	export let wrapZIndex = '9999';
 	//
@@ -49,12 +50,10 @@
 		.join(';');
 </script>
 
-<!-- Global notification live region, render this permanently at the end of the document -->
 <div
 	class="notifications position-y-mobile-{yMobile} position-y-{y} theme-{theme} {wrapClass}"
-	style="padding: {wrapPadding}; z-index: {wrapZIndex}; {cssVars}; {wrapCss};"
+	style="position: {wrapPosition}; padding: {wrapPadding}; z-index: {wrapZIndex}; {cssVars}; {wrapCss};"
 	aria-live="assertive"
-	aria-atomic="true"
 >
 	<div class="position-x-mobile-{xMobile} position-x-{x}">
 		{#if $notifications.length}
@@ -74,32 +73,31 @@
 						class:cursor-pointer={typeof n.onClick === 'function'}
 						style={notifCss}
 						data-notification-type={n.type}
+						data-notification-multiple={n.count > 1 ? true : undefined}
 						role="alert"
 						on:mouseover={() => notifications.event(n.id, notifications.EVENT.MOUSEOVER)}
 						on:click={() => notifications.event(n.id, notifications.EVENT.CLICK)}
 					>
-						<!--
-							putting additional div here, so we can utilize base background
-							above (that is use semi-transparent colors on top of it)
-						-->
-						<div class="bg">
-							<div class="content">
-								{#if n.html}{@html n.html}{:else}{n.text}{/if}
-							</div>
-							<div class="control">
-								<button
-									aria-label={ariaCloseLabel}
-									on:click|preventDefault|stopPropagation={() =>
-										notifications.remove(n.id)}
-								>
+						{#if n.count > 1}
+							<div class="count">{n.count}</div>
+						{/if}
+						<div class="content">
+							{#if n.html}{@html n.html}{:else}{n.text}{/if}
+						</div>
+						<div class="control">
+							<button
+								aria-label={ariaCloseLabel}
+								on:click|preventDefault|stopPropagation={() => notifications.remove(n.id)}
+							>
+								<span>
 									<!-- Copyright: https://icons.getbootstrap.com/icons/x/ -->
 									<svg width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
 										<path
 											d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"
 										/>
 									</svg>
-								</button>
-							</div>
+								</span>
+							</button>
 						</div>
 					</div>
 				{/if}
@@ -116,7 +114,6 @@
 
 	// outside of theme
 	.notifications {
-		position: fixed;
 		top: 0; right: 0; left: 0; bottom: 0;
 		pointer-events: none; // important
 		display: flex;
@@ -163,132 +160,165 @@
 		--space_between: 1rem;
 		//
 		--box_width: 400px;
-		--box_border: none;
+		--box_border: 1px solid #0f172a;
 		--box_font_size: .95rem;
 		--box_font_family: inherit;
-		--box_color: rgba(0, 0, 0, .9);
 		--box_border_radius: 5px;
-		--box_base_background: white;
-		--box_background: rgba(0, 0, 0, 0.05);
-		--box_background_hover: rgba(0, 0, 0, 0.1);
-		--box_max_height: 6rem;
-		--box_filter: drop-shadow(1px 1px 0px rgb(0 0 0 / 0.3)) ;
+		--box_max_height: 10rem;
+		--box_filter: none;
+		// overridden by type
+		//--box_color: #0f172a;
+		//--box_background: #f5f5f4;
+		//--box_background_hover: #e7e5e4;
+		//
+		--count_display: flex;
+		--count_background: #3f3f46;
+		--count_color: white;
+		--count_font_size: 13px;
+		--count_padding: 4px 8px;
+		--count_border_radius: 10px;
+		--count_inset: -8px -8px auto auto;
+		--count_width: auto;
+		--count_height: auto;
+		--count_after_content: '';
 		//
 		--content_line_height: 1.25;
 		--content_padding: .75rem 1rem;
 		--content_text_align: left;
 		//
-		--control_button_color: var(--box_color);
-		--control_button_color_active: var(--box_color);
+		--control_button_opacity: .5;
+		--control_button_opacity_active: 1;
+		--control_button_color: #000000;
+		--control_button_color_active: var(--control_button_color);
 		--control_button_padding: .5rem;
 		--control_button_background: rgba(0, 0, 0, 0.0);
 		--control_button_background_active: rgba(0, 0, 0, 0.05);
-		// success type specific
-		--box_color_success: var(--box_color);
-		--box_background_success: rgba(0, 255, 0, 0.1);
-		--box_background_success_hover: rgba(0, 255, 0, 0.15);
-		// error
-		--box_color_error: var(--box_color);
-		--box_background_error: rgba(255, 0, 0, 0.1);
-		--box_background_error_hover: rgba(255, 0, 0, 0.15);
+		// info
+		--box_color_info: #0f172a;
+		--box_background_info: #f5f5f4;
+		--box_background_info_hover: #e7e5e4;
+		// success
+		--box_color_success: #14532d;
+		--box_background_success: #dcfce7;
+		--box_background_success_hover: #bbf7d0;
 		// warn
-		--box_color_warn: var(--box_color);
-		--box_background_warn: rgba(255, 255, 0, 0.1);
-		--box_background_warn_hover: rgba(255, 255, 0, 0.15);
+		--box_color_warn: #713f12;
+		--box_background_warn: #fef9c3;
+		--box_background_warn_hover: #fef08a;
+		// error
+		--box_color_error: #7f1d1d;
+		--box_background_error: #fee2e2;
+		--box_background_error_hover: #fecaca;
 
 
 		& > div > * + * {
 			margin-top: var(--space_between);
 		}
 		.notification {
-			background: var(--box_base_background);
 			width: 100%;
 			max-width: var(--box_width);
 			border: var(--box_border);
 			font-size: var(--box_font_size);
 			font-family: var(--box_font_family);
-			color: var(--box_color);
 			border-radius: var(--box_border_radius);
 			filter: var(--box_filter);
+			display: flex;
+			position: relative;
 
-			.bg {
-				display: flex;
-				background: var(--box_background);
-				border-radius: var(--box_border_radius);
-				position: relative;
-
-				// the textual content
-				.content {
-					flex: 1;
-					line-height: var(--content_line_height);
-					padding: var(--content_padding);
-					overflow-y: auto;
-					max-height: var(--box_max_height);
-					text-align: var(--content_text_align);
+			.count {
+				position: absolute;
+				background: var(--count_background);
+				color: var(--count_color);
+				padding: var(--count_padding);
+				border-radius: var(--count_border_radius);
+				inset: var(--count_inset);
+				line-height: 1;
+				font-size: var(--count_font_size);
+				width: var(--count_width);
+				height: var(--count_height);
+				display: var(--count_display);
+				justify-content: center;
+				align-items: center;
+				&::after {
+					content: var(--count_after_content);
 				}
+				pointer-events: none;
+			}
 
-				// the right x button box
-				.control {
+			// the textual content
+			.content {
+				flex: 1;
+				line-height: var(--content_line_height);
+				padding: var(--content_padding);
+				overflow-y: auto;
+				max-height: var(--box_max_height);
+				text-align: var(--content_text_align);
+			}
+
+			// the right x button box
+			.control {
+				display: flex;
+				flex-direction: column;
+				button {
+					flex: 1;
 					display: flex;
-					flex-direction: column;
-					button {
-						flex: 1;
-						display: flex;
-						flex-direction: row;
-						flex-wrap: nowrap;
-						justify-content: center;
-						align-items: center;
-						border: 0;
-						margin: 0;
-						line-height: 1;
-						cursor: pointer;
-						color: var(--control_button_color);
-						padding: var(--control_button_padding);
-						background: var(--control_button_background);
-						border-top-right-radius: var(--box_border_radius);
-						border-bottom-right-radius: var(--box_border_radius);
-						&:hover, &:focus {
-							color: var(--control_button_color_active);
-							background: var(--control_button_background_active);
-							outline: none;
+					flex-direction: row;
+					flex-wrap: nowrap;
+					justify-content: center;
+					align-items: center;
+					border: 0;
+					margin: 0;
+					line-height: 1;
+					cursor: pointer;
+					color: var(--control_button_color);
+					padding: var(--control_button_padding);
+					background: var(--control_button_background);
+					border-top-right-radius: var(--box_border_radius);
+					border-bottom-right-radius: var(--box_border_radius);
+					span {
+						opacity: var(--control_button_opacity);
+					}
+					&:hover, &:focus {
+						color: var(--control_button_color_active);
+						background: var(--control_button_background_active);
+						outline: none;
+						span {
+							opacity: var(--control_button_opacity_active);
 						}
 					}
 				}
 			}
 
 			// type specific colors
-			&[data-notification-type='success'] .bg {
+			&[data-notification-type='info'] {
+				color: var(--box_color_info);
+				background: var(--box_background_info);
+			}
+			&[data-notification-type='success'] {
 				color: var(--box_color_success);
 				background: var(--box_background_success);
 			}
-			&[data-notification-type='error'] .bg {
-				color: var(--box_color_error);
-				background: var(--box_background_error);
-			}
-			&[data-notification-type='warn'] .bg {
+			&[data-notification-type='warn'] {
 				color: var(--box_color_warn);
 				background: var(--box_background_warn);
 			}
+			&[data-notification-type='error'] {
+				color: var(--box_color_error);
+				background: var(--box_background_error);
+			}
 
 			&:hover {
-				.bg {
-					background: var(--box_background_hover, var(--box_background));
-					.content {
-
-					}
-					.control {
-
-					}
+				&[data-notification-type='info'] {
+					background: var(--box_background_info_hover, var(--box_background_info));
 				}
-
-				&[data-notification-type='success'] .bg {
+				&[data-notification-type='success'] {
 					background: var(--box_background_success_hover, var(--box_background_success));
 				}
-				&[data-notification-type='error'] .bg {
-					background: var(--box_background_error_hover, var(--box_background_error));
-				}
-				&[data-notification-type='warn'] .bg {
+				&[data-notification-type='warn'] {
 					background: var(--box_background_warn_hover, var(--box_background_warn));
+				}
+				&[data-notification-type='error'] {
+					background: var(--box_background_error_hover, var(--box_background_error));
 				}
 			}
 		}

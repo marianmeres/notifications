@@ -13,6 +13,7 @@
 	export let posY = 'top';
 	export let posYMobile = 'bottom';
 	//
+	export let wrapPosition = 'fixed';
 	export let wrapPadding = '1rem';
 	export let wrapZIndex = '9999';
 	//
@@ -49,12 +50,10 @@
 		.join(';');
 </script>
 
-<!-- Global notification live region, render this permanently at the end of the document -->
 <div
 	class="notifications position-y-mobile-{yMobile} position-y-{y} theme-{theme} {wrapClass}"
-	style="padding: {wrapPadding}; z-index: {wrapZIndex}; {cssVars}; {wrapCss};"
+	style="position: {wrapPosition}; padding: {wrapPadding}; z-index: {wrapZIndex}; {cssVars}; {wrapCss};"
 	aria-live="assertive"
-	aria-atomic="true"
 >
 	<div class="position-x-mobile-{xMobile} position-x-{x}">
 		{#if $notifications.length}
@@ -74,32 +73,31 @@
 						class:cursor-pointer={typeof n.onClick === 'function'}
 						style={notifCss}
 						data-notification-type={n.type}
+						data-notification-multiple={n.count > 1 ? true : undefined}
 						role="alert"
 						on:mouseover={() => notifications.event(n.id, notifications.EVENT.MOUSEOVER)}
 						on:click={() => notifications.event(n.id, notifications.EVENT.CLICK)}
 					>
-						<!--
-							putting additional div here, so we can utilize base background
-							above (that is use semi-transparent colors on top of it)
-						-->
-						<div class="bg">
-							<div class="content">
-								{#if n.html}{@html n.html}{:else}{n.text}{/if}
-							</div>
-							<div class="control">
-								<button
-									aria-label={ariaCloseLabel}
-									on:click|preventDefault|stopPropagation={() =>
-										notifications.remove(n.id)}
-								>
+						{#if n.count > 1}
+							<div class="count">{n.count}</div>
+						{/if}
+						<div class="content">
+							{#if n.html}{@html n.html}{:else}{n.text}{/if}
+						</div>
+						<div class="control">
+							<button
+								aria-label={ariaCloseLabel}
+								on:click|preventDefault|stopPropagation={() => notifications.remove(n.id)}
+							>
+								<span>
 									<!-- Copyright: https://icons.getbootstrap.com/icons/x/ -->
 									<svg width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
 										<path
 											d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"
 										/>
 									</svg>
-								</button>
-							</div>
+								</span>
+							</button>
 						</div>
 					</div>
 				{/if}
@@ -114,7 +112,6 @@
 }
 
 .notifications {
-  position: fixed;
   top: 0;
   right: 0;
   left: 0;
@@ -173,55 +170,79 @@
 .notifications.theme-default {
   --space_between: 1rem;
   --box_width: 400px;
-  --box_border: none;
+  --box_border: 1px solid #0f172a;
   --box_font_size: .95rem;
   --box_font_family: inherit;
-  --box_color: rgba(0, 0, 0, .9);
   --box_border_radius: 5px;
-  --box_base_background: white;
-  --box_background: rgba(0, 0, 0, 0.05);
-  --box_background_hover: rgba(0, 0, 0, 0.1);
-  --box_max_height: 6rem;
-  --box_filter: drop-shadow(1px 1px 0px rgb(0 0 0 / 0.3)) ;
+  --box_max_height: 10rem;
+  --box_filter: none;
+  --count_display: flex;
+  --count_background: #3f3f46;
+  --count_color: white;
+  --count_font_size: 13px;
+  --count_padding: 4px 8px;
+  --count_border_radius: 10px;
+  --count_inset: -8px -8px auto auto;
+  --count_width: auto;
+  --count_height: auto;
+  --count_after_content: "";
   --content_line_height: 1.25;
   --content_padding: .75rem 1rem;
   --content_text_align: left;
-  --control_button_color: var(--box_color);
-  --control_button_color_active: var(--box_color);
+  --control_button_opacity: .5;
+  --control_button_opacity_active: 1;
+  --control_button_color: #000000;
+  --control_button_color_active: var(--control_button_color);
   --control_button_padding: .5rem;
   --control_button_background: rgba(0, 0, 0, 0.0);
   --control_button_background_active: rgba(0, 0, 0, 0.05);
-  --box_color_success: var(--box_color);
-  --box_background_success: rgba(0, 255, 0, 0.1);
-  --box_background_success_hover: rgba(0, 255, 0, 0.15);
-  --box_color_error: var(--box_color);
-  --box_background_error: rgba(255, 0, 0, 0.1);
-  --box_background_error_hover: rgba(255, 0, 0, 0.15);
-  --box_color_warn: var(--box_color);
-  --box_background_warn: rgba(255, 255, 0, 0.1);
-  --box_background_warn_hover: rgba(255, 255, 0, 0.15);
+  --box_color_info: #0f172a;
+  --box_background_info: #f5f5f4;
+  --box_background_info_hover: #e7e5e4;
+  --box_color_success: #14532d;
+  --box_background_success: #dcfce7;
+  --box_background_success_hover: #bbf7d0;
+  --box_color_warn: #713f12;
+  --box_background_warn: #fef9c3;
+  --box_background_warn_hover: #fef08a;
+  --box_color_error: #7f1d1d;
+  --box_background_error: #fee2e2;
+  --box_background_error_hover: #fecaca;
 }
 .notifications.theme-default > div > * + * {
   margin-top: var(--space_between);
 }
 .notifications.theme-default .notification {
-  background: var(--box_base_background);
   width: 100%;
   max-width: var(--box_width);
   border: var(--box_border);
   font-size: var(--box_font_size);
   font-family: var(--box_font_family);
-  color: var(--box_color);
   border-radius: var(--box_border_radius);
   filter: var(--box_filter);
-}
-.notifications.theme-default .notification .bg {
   display: flex;
-  background: var(--box_background);
-  border-radius: var(--box_border_radius);
   position: relative;
 }
-.notifications.theme-default .notification .bg .content {
+.notifications.theme-default .notification .count {
+  position: absolute;
+  background: var(--count_background);
+  color: var(--count_color);
+  padding: var(--count_padding);
+  border-radius: var(--count_border_radius);
+  inset: var(--count_inset);
+  line-height: 1;
+  font-size: var(--count_font_size);
+  width: var(--count_width);
+  height: var(--count_height);
+  display: var(--count_display);
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+}
+.notifications.theme-default .notification .count::after {
+  content: var(--count_after_content);
+}
+.notifications.theme-default .notification .content {
   flex: 1;
   line-height: var(--content_line_height);
   padding: var(--content_padding);
@@ -229,11 +250,11 @@
   max-height: var(--box_max_height);
   text-align: var(--content_text_align);
 }
-.notifications.theme-default .notification .bg .control {
+.notifications.theme-default .notification .control {
   display: flex;
   flex-direction: column;
 }
-.notifications.theme-default .notification .bg .control button {
+.notifications.theme-default .notification .control button {
   flex: 1;
   display: flex;
   flex-direction: row;
@@ -250,32 +271,42 @@
   border-top-right-radius: var(--box_border_radius);
   border-bottom-right-radius: var(--box_border_radius);
 }
-.notifications.theme-default .notification .bg .control button:hover, .notifications.theme-default .notification .bg .control button:focus {
+.notifications.theme-default .notification .control button span {
+  opacity: var(--control_button_opacity);
+}
+.notifications.theme-default .notification .control button:hover, .notifications.theme-default .notification .control button:focus {
   color: var(--control_button_color_active);
   background: var(--control_button_background_active);
   outline: none;
 }
-.notifications.theme-default .notification[data-notification-type=success] .bg {
+.notifications.theme-default .notification .control button:hover span, .notifications.theme-default .notification .control button:focus span {
+  opacity: var(--control_button_opacity_active);
+}
+.notifications.theme-default .notification[data-notification-type=info] {
+  color: var(--box_color_info);
+  background: var(--box_background_info);
+}
+.notifications.theme-default .notification[data-notification-type=success] {
   color: var(--box_color_success);
   background: var(--box_background_success);
 }
-.notifications.theme-default .notification[data-notification-type=error] .bg {
-  color: var(--box_color_error);
-  background: var(--box_background_error);
-}
-.notifications.theme-default .notification[data-notification-type=warn] .bg {
+.notifications.theme-default .notification[data-notification-type=warn] {
   color: var(--box_color_warn);
   background: var(--box_background_warn);
 }
-.notifications.theme-default .notification:hover .bg {
-  background: var(--box_background_hover, var(--box_background));
+.notifications.theme-default .notification[data-notification-type=error] {
+  color: var(--box_color_error);
+  background: var(--box_background_error);
 }
-.notifications.theme-default .notification:hover[data-notification-type=success] .bg {
+.notifications.theme-default .notification:hover[data-notification-type=info] {
+  background: var(--box_background_info_hover, var(--box_background_info));
+}
+.notifications.theme-default .notification:hover[data-notification-type=success] {
   background: var(--box_background_success_hover, var(--box_background_success));
 }
-.notifications.theme-default .notification:hover[data-notification-type=error] .bg {
-  background: var(--box_background_error_hover, var(--box_background_error));
-}
-.notifications.theme-default .notification:hover[data-notification-type=warn] .bg {
+.notifications.theme-default .notification:hover[data-notification-type=warn] {
   background: var(--box_background_warn_hover, var(--box_background_warn));
+}
+.notifications.theme-default .notification:hover[data-notification-type=error] {
+  background: var(--box_background_error_hover, var(--box_background_error));
 }</style>

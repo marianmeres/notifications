@@ -6,6 +6,7 @@ const DEFAULT_OPTIONS = {
     maxCapacity: 5,
     defaultTtl: 10,
     defaultType: 'info',
+    sortOrder: 'asc',
     logger: createClog('notifications'),
 };
 const EVENT = {
@@ -13,45 +14,58 @@ const EVENT = {
     CREATE: 'create',
     // `remove` programatically, or e.g. by clicking on X
     REMOVE: 'remove',
-    // to be auto disposed by ttl expiration
+    // triggered when auto disposed by ttl expiration
     AUTO_DISPOSE: 'auto_dispose',
+    // usefull for detecting interacion (so internally may notify as "seen")
     MOUSEOVER: 'mouseover',
 };
+// https://stackoverflow.com/questions/7616461/generate-a-hash-from-string-in-javascript
+const _strHash = (str) => str.split('').reduce((a, b) => {
+    a = (a << 5) - a + b.charCodeAt(0);
+    return a & a;
+}, 0);
+const _id = (type, content) => ['id', type, _strHash(content)].join('-');
 export const createNotificationsStore = (initial = [], options = {}) => {
     if (!Array.isArray(initial))
         initial = [initial];
     const _log = (...v) => (isFn(options.logger) ? options.logger.apply(null, v) : null);
-    const _id = () => `notif-${Math.random().toString(36).slice(2)}`;
     // merge provided with defaults
     options = { ...DEFAULT_OPTIONS, ...(options || {}) };
-    // sanitize options
-    ['maxCapacity', 'defaultTtl'].forEach((prop) => {
-        options[prop] = parseInt(options[prop], 10);
-        if (isNaN(options[prop]) || options[prop] < 0) {
-            _log(`WARN: invalid '${prop}' option, falling back to default`);
-            options[prop] = DEFAULT_OPTIONS[prop];
+    const _setOption = (k, v) => {
+        // _log(`INFO: setting option '${k} = ${v}'`);
+        if (/^maxCapacity|defaultTtl$/.test(k)) {
+            v = parseInt(v, 10);
+            if (isNaN(v) || v < 0) {
+                _log(`WARN: invalid '${k}' option, falling back to default`);
+                options[k] = DEFAULT_OPTIONS[k];
+            }
+            else {
+                options[k] = v;
+            }
         }
-    });
+        else {
+            options[k] = v;
+        }
+    };
+    // sanitize options
+    ['maxCapacity', 'defaultTtl'].forEach((k) => _setOption(k, options[k]));
     const _factory = (notif) => {
         if (typeof notif === 'string') {
-            notif = { id: _id(), text: notif };
+            notif = { id: 0, text: notif };
         }
         // ignore invalid (empty) notifs
         if (!notif.text && !notif.html) {
             _log(`WARN: ignoring empty notification`);
             return null;
         }
-        notif.id ||= _id();
         notif.type ||= options.defaultType; //
+        notif.id ||= _id(notif.type, [notif.text, notif.html].join());
         notif.created = new Date(notif.created || Date.now());
+        notif.count = 1;
         //
         if (notif.ttl === undefined)
             notif.ttl = options.defaultTtl;
         return notif;
-    };
-    const _findIndex = (notifs, notif) => {
-        notif = _factory(notif);
-        return notif ? _findIndexById(notifs, notif.id) : -1;
     };
     const _findIndexById = (notifs, id) => notifs.findIndex((n) => n.id === id);
     const _removeByIdx = (notifs, idx) => {
@@ -61,23 +75,34 @@ export const createNotificationsStore = (initial = [], options = {}) => {
         }
         return notifs;
     };
-    const _contains = (notifs, notif) => _findIndex(notifs, notif) > -1;
     const _add = (notifs, notif, onAddHook = null) => {
         notif = _factory(notif);
-        let changed = 0;
-        if (notif && !_contains(notifs, notif)) {
+        // return early on invalid
+        if (!notif)
+            return notifs;
+        const _isDesc = options.sortOrder === 'desc';
+        const idx = _findIndexById(notifs, notif.id);
+        if (idx > -1) {
+            notifs[idx].count++;
+            notifs[idx].created = new Date(Math.max(notifs[idx].created.valueOf(), notif.created.valueOf()));
+        }
+        else {
             notifs.push(notif);
-            notifs.sort((a, b) => a.created.valueOf() - b.created.valueOf());
-            if (isFn(onAddHook))
-                onAddHook(notif);
-            changed++;
+            notifs.sort((a, b) => {
+                let _a = a.created.valueOf();
+                let _b = b.created.valueOf();
+                return _isDesc ? _b - _a : _a - _b;
+            });
         }
-        // keep only `maxCapacity` most recent
+        if (isFn(onAddHook))
+            onAddHook(notif);
+        // keep only `maxCapacity` in the queue
         if (options.maxCapacity && notifs.length > options.maxCapacity) {
-            notifs = notifs.slice(-1 * options.maxCapacity);
-            changed++;
+            notifs = _isDesc
+                ? notifs.slice(0, options.maxCapacity)
+                : notifs.slice(-1 * options.maxCapacity);
         }
-        return changed ? [...notifs] : notifs;
+        return [...notifs];
     };
     // main internal store
     let notifs = [];
@@ -117,8 +142,10 @@ export const createNotificationsStore = (initial = [], options = {}) => {
     }
     function event(id, eventName, data = null) {
         const n = findById(id);
-        if (n && isFn(n.on)) {
-            n.on(eventName, n, _store.get(), data);
+        if (n) {
+            if (isFn(n.on)) {
+                n.on(eventName, n, _store.get(), data);
+            }
             if (eventName === EVENT.CLICK && isFn(n.onClick)) {
                 n.onClick(n, _store.get(), data);
             }
@@ -171,5 +198,8 @@ export const createNotificationsStore = (initial = [], options = {}) => {
         options: { ...options },
         //
         EVENT,
+        // some options setters (for playground mostly)
+        setMaxCapacity: (v) => _setOption('maxCapacity', v),
+        setSortOrder: (v) => _setOption('sortOrder', v),
     };
 };

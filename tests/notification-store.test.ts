@@ -13,6 +13,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 suite.test('initial', async () => {
 	const store = createNotificationsStore(['foo']);
 	store.subscribe((notifs) => {
+		// clog(notifs);
 		assert(notifs.length === 1);
 		assert(notifs[0].text === 'foo');
 		assert(notifs[0].id);
@@ -128,5 +129,22 @@ suite.test(
 	},
 	1200
 );
+
+suite.test('multiple same id increases count', async () => {
+	const store = createNotificationsStore([
+		{ id: 'foo', text: 'Foo' },
+		{ id: 'bar', text: 'Bar' },
+		{ id: 'foo', text: 'This will be ignored because same id' },
+	]);
+	store.subscribe((notifs) => {
+		// clog(notifs);
+		assert(notifs.length === 2);
+		assert(notifs[0].text === 'Foo');
+		assert(notifs[0].count === 2);
+
+		assert(notifs[1].text === 'Bar');
+		assert(notifs[1].count === 1);
+	})();
+});
 
 export default suite;

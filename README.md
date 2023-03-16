@@ -6,7 +6,10 @@ Two main parts:
    [store](https://github.com/marianmeres/store) for notification objects management.
 2. Customizable [Svelte](https://svelte.dev/) notifications UI component.
 
-See and play with online at [playground](https://notifications.meres.sk).
+## [Playground and theme editor](https://notifications.meres.sk)
+
+Play with it online at [playground](https://notifications.meres.sk). You can visually
+edit the theme and just copy the generated code to your project.
 
 ## Install
 ```shell
@@ -29,6 +32,8 @@ const store = createNotificationsStore(
         // global time-to-live in seconds (after which notifs will be auto discarded)
         // use 0 to disable default auto disposal
         defaultTtl: 10,
+        // "asc" or "desc"
+        sortOrder: 'asc',
     }
 );
 
@@ -38,6 +43,7 @@ store.add('Some plain text');
 // or rich object...
 store.add({
     // notifications without any text or html will be ignored
+	
     // the actual notification message
     text: string,
     // or (USE ONLY FOR MESSAGES WHICH YOU HAVE CONTROL OVER)
@@ -45,17 +51,19 @@ store.add({
     
     // ALL BELOW ARE OPTIONAL
     
-    // unique id of the notif. Multiple notifications with the same id will be ignored
+    // unique id of the notif. If not provided, calculated from `type` and `text` or `html`.
+    // Equal ids are considered as duplicates and dicarded 
     id: any,
     // optional UI rendering well known hint (has no effect on the functionality, can be
-    // any string), defaults to "info"
+    // any string), defaults to "info". Supported types out of the box are:
+    // info, success, warn, error
     type: string,
-    // will default to now (used for sorting, most recent comes first)
+    // will default to now (used for sorting)
     created: Date,
     // generic action handler for triggered actions...
     on: (eventName, self: Notification, all: Notification[], data) => any,
     // functionally same as `on('click', ...)` except that ui may render differently if
-    // this exists (e.g. show pointer cursor)
+    // if exists (e.g. show pointer cursor)
     onClick: (self: Notification, all: Notification[], data) => any,
     // notification specific time-to-live in seconds (after which notif will be auto discarded)
     // use 0 to disable auto disposal
@@ -78,12 +86,12 @@ store.event(notif.id, 'my custom event', { some: 'event data' })
 
 Customization options:
 - customize css vars of the default theme via `themeVars={{ var_name: value }}` prop. 
-  See source for supported vars,
+  See source for supported vars. [You can also edit the theme visually](https://notifications.meres.sk),
 - create globally available custom css definition "namespaced" as `.notifications.theme-my-theme` 
   and assign it via `theme="my-theme"` prop,
 - use additional "quick and dirty" props `wrapClass`, `wrapClass`, `notifClass`, `notifCss`,
 - use custom component (via store `options.component`), which will completelly bypass 
-  default rendering but still allow position/auto discard features. 
+  default rendering but still allow position and auto disposal features. 
   Always set `pointer-events: auto` on the custom component.
 
 ```javascript
@@ -96,7 +104,7 @@ import Notifications from "@marianmeres/notifications/Notifications.svelte";
     posXMobile={left/center/right}
     posY={top/center/bottom} 
     posYMobile={top/center/bottom} 
-    theme="custom_theme_name"
-    themeVars={{'some_theme_var': 'blue'}}
+    theme="my_theme_name"
+    themeVars={{'my_theme_var': 'blue'}}
 />
 ```
