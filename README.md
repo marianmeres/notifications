@@ -53,12 +53,12 @@ store.add({
     
     // ALL BELOW ARE OPTIONAL
     
-    // unique id of the notif. If not provided, calculated from `type` and `text` or `html`.
-    // Equal ids are considered as duplicates and dicarded 
+    // Unique id of the notif. If not provided, will be calculated from `type` and `text` or `html`.
+    // Equal ids are considered as duplicates and will be discarded (the `count` prop will be increased).
     id: any,
 
-    // optional UI rendering well known hint (has no effect on the functionality, can be
-    // any string), defaults to "info". Supported types out of the box are:
+    // Optional UI rendering well known hint (has no effect on the functionality, can be
+    // any string), defaults to "info". Supported types in the built in renderer are:
     // info, success, warn, error
     type: string,
 
@@ -67,12 +67,12 @@ store.add({
 
     // generic action handler for triggered actions...
     on: (eventName, self: Notification, all: Notification[], data) => any,
-    // functionally same as `on('click', ...)` except that ui may render differently if
-    // if exists (e.g. show pointer cursor)
+    // functionally same as `on('click', ...)` except that ui may render it differently if
+    // it exists (e.g. show pointer cursor)
     onClick: (self: Notification, all: Notification[], data) => any,
 
-    // notification specific time-to-live in seconds (after which notif will be auto discarded)
-    // use 0 to disable auto disposal
+    // Notification specific time-to-live in seconds (after which notif will be auto discarded).
+    // Use 0 to disable auto disposal.
     ttl: number,
 
     // if present, will skip default rendering altogether
