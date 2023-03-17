@@ -2,8 +2,7 @@
 
 Two main parts:
 
-1. Generic [Svelte](https://svelte.dev/) compatible 
-   [_readable_ store](https://svelte.dev/docs#run-time-svelte-store-readable) for 
+1. Generic [Svelte compatible store](https://svelte.dev/docs#component-format-script-4-prefix-stores-with-$-to-access-their-values-store-contract) for 
    notification objects management.
 2. Customizable [Svelte](https://svelte.dev/) notifications UI component.
 
