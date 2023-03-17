@@ -46,6 +46,9 @@
     - just before closing &lt;/body&gt; tag (with position="fixed" prop), or
     - just before closing tag of the parent (with position="absolute" prop, while parent
       being positioned "relative")
+
+  If you just want to try it out without any customizations, this should just work:
+  &lt;Notifications {`{notifications}`} /&gt;
 --&gt;
 &lt;Notifications
   {`{notifications}`}
