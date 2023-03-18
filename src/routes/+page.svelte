@@ -22,6 +22,8 @@
 	} from './_playground/utils.js';
 	import ClipCopy from './_playground/ClipCopy.svelte';
 
+	export let data;
+
 	const clog = createClog('example');
 
 	const TYPES = ['info', 'success', 'warn', 'error'];
@@ -228,7 +230,8 @@
 		</div>
 
 		<footer>
-			Author: Marian Meres, <a href="mailto:marian@meres.sk">marian@meres.sk</a>
+			Author: Marian Meres, <a href="mailto:marian@meres.sk">marian@meres.sk</a><br/>
+			Version: { data?.VERSION }
 		</footer>
 	</div>
 	<div class="right">
