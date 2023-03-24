@@ -230,8 +230,8 @@
 		</div>
 
 		<footer>
-			Author: Marian Meres, <a href="mailto:marian@meres.sk">marian@meres.sk</a><br/>
-			Version: { data?.VERSION }
+			Author: Marian Meres, <a href="mailto:marian@meres.sk">marian@meres.sk</a><br />
+			Version: {data?.VERSION}
 		</footer>
 	</div>
 	<div class="right">

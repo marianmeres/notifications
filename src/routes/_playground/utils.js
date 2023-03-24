@@ -1,19 +1,13 @@
 // prettier-ignore
-import { getRandomHumanReadable } from "@marianmeres/random-human-readable";
+import { getRandomHumanReadable, getRandomSentence } from "@marianmeres/random-human-readable";
 
 export const randomTxt = () => {
-	const ucf = (s) => s.slice(0, 1).toUpperCase() + s.slice(1);
+	const ucf = (s) => s[0].toUpperCase() + s.slice(1);
 	const rhr = () =>
 		getRandomHumanReadable({ adjCount: 2, colorsCount: 1, nounsCount: 1, joinWith: ' ' });
-	return [
-		'<b>',
-		ucf(rhr()),
-		'</b><br /><small>',
-		ucf(rhr()),
-		' and ',
-		rhr(),
-		'.</small>',
-	].join('');
+	return ['<b>', ucf(rhr()), '</b><br /><small>', getRandomSentence(), '</small>'].join(
+		''
+	);
 };
 
 export const getRandomInt = (min, exclusiveMax) => {
