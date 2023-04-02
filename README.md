@@ -36,6 +36,11 @@ const store = createNotificationsStore(
 
         // "asc" or "desc"
         sortOrder: 'asc',
+
+        // boolean to dis/allow (default) icons, or
+        // custom type-to-fn map (function should return svg/html string)
+        // tip: https://github.com/marianmeres/icons-fns
+        defaultIcons: Record<string, Function> | boolean,
     }
 );
 
@@ -77,6 +82,10 @@ store.add({
 
     // if present, will skip default rendering altogether
     component: Function | RenderProps,
+
+    // either boolean indicating whether to use default icons
+    // or function returning svg string (tip: https://github.com/marianmeres/icons-fns)
+    icon: Function | boolean,
 });
 
 // 

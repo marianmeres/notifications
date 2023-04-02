@@ -1,7 +1,6 @@
 <script>
 	import { writable } from 'svelte/store';
 	import { onDestroy, onMount } from 'svelte';
-	import { getRandomHumanReadable } from '@marianmeres/random-human-readable';
 	import { createClog } from '@marianmeres/clog';
 	import { createNotificationsStore } from '$lib';
 	import './_playground/tooltip.css';

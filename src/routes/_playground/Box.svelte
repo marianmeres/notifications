@@ -19,6 +19,8 @@
 	let countColor = '#ffffff';
 	let xColor = '#000000';
 	let xOpacity = '.5';
+	let iDisplay = true;
+	let iOpacity = '.75';
 
 	$: $themeVars.space_between = `${spaceBetween}rem`;
 	$: $themeVars.box_border_radius = `${borderRadius}px`;
@@ -28,6 +30,8 @@
 	$: $themeVars.count_background = countBg;
 	$: $themeVars.control_button_color = xColor;
 	$: $themeVars.control_button_opacity = xOpacity;
+	$: $themeVars.icon_display = iDisplay ? 'flex' : 'none';
+	$: $themeVars.icon_opacity = iOpacity;
 	$: $themeVars.box_border = `${borderWidth}px solid ${borderColor}`;
 	$: $themeVars.box_filter = parseInt(shadow, 10)
 		? `drop-shadow(2px 2px ${shadow}px rgb(0 0 0 / .3))`
@@ -161,6 +165,32 @@
 					bind:value={countColor}
 					data-tooltip="up"
 					aria-label="Count badge text color"
+				/>
+			</div>
+		</td>
+	</tr>
+	<tr>
+		<th>Type icon</th>
+		<td>
+			<div style="display: flex;">
+				<input
+					type="checkbox"
+					id="idisplay"
+					style="width: auto"
+					bind:checked={iDisplay}
+				/>
+				<label for="idisplay">
+					<span style="padding: 0 .5rem;">show</span>
+				</label>
+				<input
+					style="flex: 1"
+					type="range"
+					bind:value={iOpacity}
+					min="0.1"
+					max="1"
+					step="0.10"
+					data-tooltip="up"
+					aria-label="X icon opacity"
 				/>
 			</div>
 		</td>

@@ -1,5 +1,9 @@
 <script>
 	import { fade } from 'svelte/transition';
+	import { iconBytesizeInfo } from '$lib/svelte/iconBytesizeInfo.js';
+	import { iconBytesizeCheckmark } from '$lib/svelte/iconBytesizeCheckmark.js';
+	import { iconBytesizeBell } from '$lib/svelte/iconBytesizeBell.js';
+	import { iconBytesizeAlert } from '$lib/svelte/iconBytesizeAlert.js';
 
 	// the store created by createNotificationsStore()
 	export let notifications;
@@ -30,6 +34,15 @@
 	//
 	export let theme = 'default';
 	export let themeVars = {};
+
+	// https://github.com/marianmeres/icons-fns
+	// prettier-ignore
+	const ICONS = {
+		info: iconBytesizeInfo,
+		success: iconBytesizeCheckmark,
+		warn: iconBytesizeBell,
+		error: iconBytesizeAlert,
+	}
 
 	// sanitize
 	let x, y, xMobile, yMobile;
@@ -81,8 +94,19 @@
 						{#if n.count > 1}
 							<div class="count">{n.count}</div>
 						{/if}
+						{#if n.icon}
+							<div class="icon">
+								{#if n.icon === true && ICONS[n.type]}
+									{@html ICONS[n.type](null, 28)}
+								{:else if typeof n.icon === 'function'}
+									{@html n.icon()}
+								{/if}
+							</div>
+						{/if}
 						<div class="content">
-							{#if n.html}{@html n.html}{:else}{n.text}{/if}
+							<div>
+								{#if n.html}{@html n.html}{:else}{n.text}{/if}
+							</div>
 						</div>
 						<div class="control">
 							<button
@@ -182,6 +206,9 @@
 		--count_height: auto;
 		--count_after_content: '';
 		//
+		--icon_display: 'flex';
+		--icon_opacity: .75;
+		//
 		--content_line_height: 1.25;
 		--content_padding: .75rem 1rem;
 		--content_text_align: left;
@@ -245,6 +272,14 @@
 				pointer-events: none;
 			}
 
+			.icon {
+				display: var(--icon_display);
+				flex-direction: column;
+				justify-content: center;
+				padding: 1rem 0 1rem 1rem;
+				opacity: var(--icon_opacity);
+			}
+
 			// the textual content
 			.content {
 				flex: 1;
@@ -253,6 +288,9 @@
 				overflow-y: auto;
 				max-height: var(--box_max_height);
 				text-align: var(--content_text_align);
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
 			}
 
 			// the right x button box

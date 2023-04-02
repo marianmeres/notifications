@@ -55,6 +55,9 @@ interface Notification extends Record<string, any> {
 
 	// optional (but conventional) render config, in shape `{ component, props }`
 	component: Function | RenderProps;
+
+	//
+	icon: Function | boolean;
 }
 
 type NotificationParam = Partial<Notification> | string;
@@ -76,6 +79,10 @@ interface CreateNotiticationStoreOptions {
 	// Sorting is always done by the `created` prop.
 	sortOrder?: SortOrder;
 
+	// boolean to dis/allow default icons, or
+	// custom type-to-fn map (function should return svg string)
+	defaultIcons?: Record<string, Function> | boolean;
+
 	// debug
 	logger: (...v) => void;
 }
@@ -87,6 +94,7 @@ const DEFAULT_OPTIONS: Partial<CreateNotiticationStoreOptions> = {
 	defaultTtl: 10,
 	defaultType: 'info',
 	sortOrder: 'asc',
+	defaultIcons: true,
 	logger: createClog('notifications'),
 };
 
@@ -157,6 +165,13 @@ export const createNotificationsStore = (
 
 		//
 		if (notif.ttl === undefined) notif.ttl = options.defaultTtl;
+		if (notif.icon === undefined) {
+			if (typeof options.defaultIcons === 'boolean') {
+				notif.icon = options.defaultIcons;
+			} else {
+				notif.icon = options.defaultIcons[notif.type];
+			}
+		}
 
 		return notif;
 	};
