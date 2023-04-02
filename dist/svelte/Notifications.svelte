@@ -97,7 +97,7 @@
 						{#if n.icon}
 							<div class="icon">
 								{#if n.icon === true && ICONS[n.type]}
-									{@html ICONS[n.type](null, 28)}
+									{@html ICONS[n.type](null, 24)}
 								{:else if typeof n.icon === 'function'}
 									{@html n.icon()}
 								{/if}
@@ -211,7 +211,7 @@
   --count_height: auto;
   --count_after_content: "";
   --icon_display: "flex";
-  --icon_opacity: .75;
+  --icon_opacity: .9;
   --content_line_height: 1.25;
   --content_padding: .75rem 1rem;
   --content_text_align: left;
