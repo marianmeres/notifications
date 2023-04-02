@@ -7,6 +7,7 @@ const DEFAULT_OPTIONS = {
     defaultTtl: 10,
     defaultType: 'info',
     sortOrder: 'asc',
+    defaultIcons: true,
     logger: createClog('notifications'),
 };
 const EVENT = {
@@ -65,6 +66,14 @@ export const createNotificationsStore = (initial = [], options = {}) => {
         //
         if (notif.ttl === undefined)
             notif.ttl = options.defaultTtl;
+        if (notif.icon === undefined) {
+            if (typeof options.defaultIcons === 'boolean') {
+                notif.icon = options.defaultIcons;
+            }
+            else {
+                notif.icon = options.defaultIcons[notif.type];
+            }
+        }
         return notif;
     };
     const _findIndexById = (notifs, id) => notifs.findIndex((n) => n.id === id);

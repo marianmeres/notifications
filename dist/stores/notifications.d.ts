@@ -17,6 +17,7 @@ interface Notification extends Record<string, any> {
     ttl: number;
     count: number;
     component: Function | RenderProps;
+    icon: Function | boolean;
 }
 type NotificationParam = Partial<Notification> | string;
 interface CreateNotiticationStoreOptions {
@@ -24,6 +25,7 @@ interface CreateNotiticationStoreOptions {
     defaultType: string;
     defaultTtl: number;
     sortOrder?: SortOrder;
+    defaultIcons?: Record<string, Function> | boolean;
     logger: (...v: any[]) => void;
 }
 export declare const createNotificationsStore: (initial?: NotificationParam[], options?: Partial<CreateNotiticationStoreOptions>) => {
@@ -38,6 +40,7 @@ export declare const createNotificationsStore: (initial?: NotificationParam[], o
         defaultType?: string;
         defaultTtl?: number;
         sortOrder?: SortOrder;
+        defaultIcons?: Record<string, Function> | boolean;
         logger?: (...v: any[]) => void;
     };
     EVENT: {
