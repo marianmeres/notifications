@@ -20,7 +20,7 @@
 	let xColor = '#000000';
 	let xOpacity = '.5';
 	let iDisplay = true;
-	let iOpacity = '.75';
+	let iOpacity = '.9';
 
 	$: $themeVars.space_between = `${spaceBetween}rem`;
 	$: $themeVars.box_border_radius = `${borderRadius}px`;
@@ -186,7 +186,7 @@
 					style="flex: 1"
 					type="range"
 					bind:value={iOpacity}
-					min="0.1"
+					min="0.5"
 					max="1"
 					step="0.10"
 					data-tooltip="up"
