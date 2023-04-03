@@ -32,7 +32,7 @@
 	},
 	"devDependencies": {
 		"@marianmeres/clog": "^1.0.0",
-		"@marianmeres/random-human-readable": "^1.2.0",
+		"@marianmeres/random-human-readable": "^1.2.1",
 		"@marianmeres/release": "^1.0.0",
 		"@marianmeres/test-runner": "^2.0.13",
 		"@sveltejs/adapter-auto": "^2.0.0",
