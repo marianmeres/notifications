@@ -229,7 +229,7 @@ export const createNotificationsStore = (
 	// main internal store
 	let notifs = [];
 	initial.forEach((n) => (notifs = _add(notifs, n)));
-	const _store = createStore(notifs);
+	const _store = createStore<Notification[]>(notifs);
 
 	// auto dispose feature
 	const ticker = createTicker(1_000);
