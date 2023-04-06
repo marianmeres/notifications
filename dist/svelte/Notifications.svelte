@@ -89,6 +89,7 @@
 						data-notification-multiple={n.count > 1 ? true : undefined}
 						role="alert"
 						on:mouseover={() => notifications.event(n.id, notifications.EVENT.MOUSEOVER)}
+						on:mouseout={() => notifications.event(n.id, notifications.EVENT.MOUSEOUT)}
 						on:click={() => notifications.event(n.id, notifications.EVENT.CLICK)}
 					>
 						{#if n.count > 1}

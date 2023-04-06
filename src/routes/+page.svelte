@@ -63,12 +63,10 @@
 	//
 	const create = (all = false) => {
 		const on = (eventName, self, all, data) => {
-			if (eventName !== notifications.EVENT.MOUSEOVER) {
-				log = [
-					`${new Date().toISOString().slice(14, 19)} ${eventName}: ${self.id}`,
-					...log,
-				];
-			}
+			log = [
+				`${new Date().toISOString().slice(14, 19)} ${eventName}: ${self.id}`,
+				...log,
+			];
 		};
 		const onClick = (self, all, data) => console.log(`Clicked on ${self.id}`);
 		if (all) {
@@ -225,13 +223,18 @@
 				</p>
 			</Block>
 
-			<!--<Block><Console {log} /></Block>-->
 		</div>
 
 		<footer>
 			Author: Marian Meres, <a href="mailto:marian@meres.sk">marian@meres.sk</a><br />
 			Version: {data?.VERSION}
 		</footer>
+
+		<div
+			style="
+				padding: 1rem 0 1rem 1rem; border-top: 1px solid silver; margin-top: 1rem;
+			"
+		><Console {log} on:clear={() => (log = [])}/></div>
 	</div>
 	<div class="right">
 		<Code {themeVars} {componentProps} {storeConfig} bind:outputRef />

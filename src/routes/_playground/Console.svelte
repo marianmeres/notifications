@@ -1,14 +1,17 @@
 <script>
+	import { createEventDispatcher } from "svelte";
+
+	const dispatch = createEventDispatcher();
 	export let log = [];
 </script>
 
-Event log
 {#if log.length}
+	<small>Event log</small>
 	<small
-		on:click={() => (log = [])}
+		on:click={() => dispatch('clear')}
 		style="text-decoration: underline; cursor: pointer; opacity: 75%;"
 	>
-		clear
+		[clear]
 	</small>
 	<pre>{log.slice(0, 15).join('\n')}</pre>
 {/if}

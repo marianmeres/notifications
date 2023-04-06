@@ -136,4 +136,6 @@ import Notifications from "@marianmeres/notifications/Notifications.svelte";
 
 ## Screenshots
 
+![example](./screenshots/example2.png)
+<br />
 ![example](./screenshots/example.png)

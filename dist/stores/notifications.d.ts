@@ -49,6 +49,7 @@ export declare const createNotificationsStore: (initial?: NotificationParam[], o
         REMOVE: string;
         AUTO_DISPOSE: string;
         MOUSEOVER: string;
+        MOUSEOUT: string;
     };
     setMaxCapacity: (v: any) => void;
     setSortOrder: (v: any) => void;

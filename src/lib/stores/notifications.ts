@@ -107,6 +107,7 @@ const EVENT = {
 	AUTO_DISPOSE: 'auto_dispose',
 	// usefull for detecting interacion (so internally may notify as "seen")
 	MOUSEOVER: 'mouseover',
+	MOUSEOUT: 'mouseout',
 };
 
 // https://stackoverflow.com/questions/7616461/generate-a-hash-from-string-in-javascript
