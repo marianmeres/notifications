@@ -2,8 +2,7 @@
 
 Two main parts:
 
-1. Generic [Svelte compatible readable store](https://svelte.dev/docs#component-format-script-4-prefix-stores-with-$-to-access-their-values-store-contract) for 
-   notification objects management.
+1. Generic Svelte compatible store for notification objects management.
 2. Customizable [Svelte](https://svelte.dev/) notifications UI component.
 
 ## [Playground and theme editor](https://notifications.meres.sk)
@@ -72,7 +71,8 @@ store.add({
 
     // generic action handler for triggered actions...
     on: (eventName, self: Notification, all: Notification[], data) => any,
-    // functionally same as `on('click', ...)` except that ui may render it differently if
+    
+    // functionally same as `on('click', ...)` except that UI can render it differently if
     // it exists (e.g. show pointer cursor)
     onClick: (self: Notification, all: Notification[], data) => any,
 
@@ -106,7 +106,7 @@ Customization options:
   See source for full list of supported css vars [here](https://github.com/marianmeres/notifications/blob/master/src/lib/svelte/Notifications.svelte#L159).
 - create globally available custom css definition "namespaced" as `.notifications.theme-my-theme` 
   and assign it via `theme="my-theme"` prop,
-- use additional "quick and dirty" props `wrapClass`, `wrapCss`, `notifClass`, `notifCss`,
+- use additional props `wrapClass`, `wrapCss`, `notifClass`, `notifCss`,
 - use custom component (via `notification.component`), which will completely bypass 
   default rendering but still allow position and auto disposal features. 
   Always set `pointer-events: auto` on the custom component.
@@ -121,7 +121,7 @@ import Notifications from "@marianmeres/notifications/Notifications.svelte";
 // if you dont need to customize, the default should just work:
 <Notifications notifications={store} />
 
-// for customization
+// for customization (see playground for more)
 <Notifications 
     notifications={store} 
     posX={left/center/right} 
@@ -138,4 +138,9 @@ import Notifications from "@marianmeres/notifications/Notifications.svelte";
 
 ![example](./screenshots/example2.png)
 <br />
+<br />
 ![example](./screenshots/example.png)
+
+---
+
+Bullshit texts used in playground by [@marianmeres/random-human-readable](https://github.com/marianmeres/random-human-readable)
