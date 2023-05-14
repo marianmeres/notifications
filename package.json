@@ -18,10 +18,6 @@
 		".": {
 			"types": "./dist/index.d.ts",
 			"svelte": "./dist/index.js"
-		},
-		"./Notifications.svelte": {
-			"types": "./dist/svelte/Notifications.svelte.d.ts",
-			"svelte": "./dist/svelte/Notifications.svelte"
 		}
 	},
 	"files": [
