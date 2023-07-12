@@ -19,7 +19,7 @@
 
 {#if isCopied}
 	<small
-		transition:fade
+		transition:fade|global
 		style="display: inline-block; padding-left: .5rem; opacity: 75%;"
 	>
 		✓ Copied

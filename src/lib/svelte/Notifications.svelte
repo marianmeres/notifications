@@ -81,7 +81,7 @@
 					/>
 				{:else}
 					<div
-						transition:fade={{ duration: 300 }}
+						transition:fade|global={{ duration: 300 }}
 						class="notification {notifClass}"
 						class:cursor-pointer={typeof n.onClick === 'function'}
 						style={notifCss}

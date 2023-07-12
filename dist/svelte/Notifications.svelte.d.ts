@@ -1,7 +1,7 @@
 /** @typedef {typeof __propDef.props}  NotificationsProps */
 /** @typedef {typeof __propDef.events}  NotificationsEvents */
 /** @typedef {typeof __propDef.slots}  NotificationsSlots */
-export default class Notifications extends SvelteComponentTyped<{
+export default class Notifications extends SvelteComponent<{
     notifications: any;
     posX?: string;
     posXMobile?: string;
@@ -24,7 +24,7 @@ export default class Notifications extends SvelteComponentTyped<{
 export type NotificationsProps = typeof __propDef.props;
 export type NotificationsEvents = typeof __propDef.events;
 export type NotificationsSlots = typeof __propDef.slots;
-import { SvelteComponentTyped } from "svelte";
+import { SvelteComponent } from "svelte";
 declare const __propDef: {
     props: {
         notifications: any;
